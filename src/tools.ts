@@ -11,44 +11,52 @@ import { NotebookEditTool } from './tools/NotebookEditTool/NotebookEditTool.js'
 import { WebFetchTool } from './tools/WebFetchTool/WebFetchTool.js'
 import { TaskStopTool } from './tools/TaskStopTool/TaskStopTool.js'
 import { BriefTool } from './tools/BriefTool/BriefTool.js'
+// Helper for safe dynamic require - only resolves at runtime
+function safeRequire<T>(modulePath: string, exportName: string): T | null {
+  try {
+    const m = require(modulePath)
+    return m[exportName] as T
+  } catch {
+    return null
+  }
+}
+
 // Dead code elimination: conditional import for ant-only tools
 /* eslint-disable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 const REPLTool =
   process.env.USER_TYPE === 'ant'
-    ? require('./tools/REPLTool/REPLTool.js').REPLTool
+    ? safeRequire('./tools/REPLTool/REPLTool.js', 'REPLTool')
     : null
 const SuggestBackgroundPRTool =
   process.env.USER_TYPE === 'ant'
-    ? require('./tools/SuggestBackgroundPRTool/SuggestBackgroundPRTool.js')
-        .SuggestBackgroundPRTool
+    ? safeRequire('./tools/SuggestBackgroundPRTool/SuggestBackgroundPRTool.js', 'SuggestBackgroundPRTool')
     : null
 const SleepTool =
   feature('PROACTIVE') || feature('KAIROS')
-    ? require('./tools/SleepTool/SleepTool.js').SleepTool
+    ? safeRequire('./tools/SleepTool/SleepTool.js', 'SleepTool')
     : null
 const cronTools = feature('AGENT_TRIGGERS')
   ? [
-      require('./tools/ScheduleCronTool/CronCreateTool.js').CronCreateTool,
-      require('./tools/ScheduleCronTool/CronDeleteTool.js').CronDeleteTool,
-      require('./tools/ScheduleCronTool/CronListTool.js').CronListTool,
-    ]
+      safeRequire('./tools/ScheduleCronTool/CronCreateTool.js', 'CronCreateTool'),
+      safeRequire('./tools/ScheduleCronTool/CronDeleteTool.js', 'CronDeleteTool'),
+      safeRequire('./tools/ScheduleCronTool/CronListTool.js', 'CronListTool'),
+    ].filter(Boolean) as any[]
   : []
 const RemoteTriggerTool = feature('AGENT_TRIGGERS_REMOTE')
-  ? require('./tools/RemoteTriggerTool/RemoteTriggerTool.js').RemoteTriggerTool
+  ? safeRequire('./tools/RemoteTriggerTool/RemoteTriggerTool.js', 'RemoteTriggerTool')
   : null
 const MonitorTool = feature('MONITOR_TOOL')
-  ? require('./tools/MonitorTool/MonitorTool.js').MonitorTool
+  ? safeRequire('./tools/MonitorTool/MonitorTool.js', 'MonitorTool')
   : null
 const SendUserFileTool = feature('KAIROS')
-  ? require('./tools/SendUserFileTool/SendUserFileTool.js').SendUserFileTool
+  ? safeRequire('./tools/SendUserFileTool/SendUserFileTool.js', 'SendUserFileTool')
   : null
 const PushNotificationTool =
   feature('KAIROS') || feature('KAIROS_PUSH_NOTIFICATION')
-    ? require('./tools/PushNotificationTool/PushNotificationTool.js')
-        .PushNotificationTool
+    ? safeRequire('./tools/PushNotificationTool/PushNotificationTool.js', 'PushNotificationTool')
     : null
 const SubscribePRTool = feature('KAIROS_GITHUB_WEBHOOKS')
-  ? require('./tools/SubscribePRTool/SubscribePRTool.js').SubscribePRTool
+  ? safeRequire('./tools/SubscribePRTool/SubscribePRTool.js', 'SubscribePRTool')
   : null
 /* eslint-enable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 import { TaskOutputTool } from './tools/TaskOutputTool/TaskOutputTool.js'
@@ -90,8 +98,7 @@ import { isTodoV2Enabled } from './utils/tasks.js'
 /* eslint-disable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 const VerifyPlanExecutionTool =
   process.env.CLAUDE_CODE_VERIFY_PLAN === 'true'
-    ? require('./tools/VerifyPlanExecutionTool/VerifyPlanExecutionTool.js')
-        .VerifyPlanExecutionTool
+    ? safeRequire('./tools/VerifyPlanExecutionTool/VerifyPlanExecutionTool.js', 'VerifyPlanExecutionTool')
     : null
 /* eslint-enable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 import { SYNTHETIC_OUTPUT_TOOL_NAME } from './tools/SyntheticOutputTool/SyntheticOutputTool.js'
@@ -105,31 +112,40 @@ import { feature } from 'bun:bundle'
 // Dead code elimination: conditional import for OVERFLOW_TEST_TOOL
 /* eslint-disable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
 const OverflowTestTool = feature('OVERFLOW_TEST_TOOL')
-  ? require('./tools/OverflowTestTool/OverflowTestTool.js').OverflowTestTool
+  ? safeRequire('./tools/OverflowTestTool/OverflowTestTool.js', 'OverflowTestTool')
   : null
 const CtxInspectTool = feature('CONTEXT_COLLAPSE')
-  ? require('./tools/CtxInspectTool/CtxInspectTool.js').CtxInspectTool
+  ? safeRequire('./tools/CtxInspectTool/CtxInspectTool.js', 'CtxInspectTool')
   : null
 const TerminalCaptureTool = feature('TERMINAL_PANEL')
-  ? require('./tools/TerminalCaptureTool/TerminalCaptureTool.js')
-      .TerminalCaptureTool
+  ? safeRequire('./tools/TerminalCaptureTool/TerminalCaptureTool.js', 'TerminalCaptureTool')
   : null
 const WebBrowserTool = feature('WEB_BROWSER_TOOL')
-  ? require('./tools/WebBrowserTool/WebBrowserTool.js').WebBrowserTool
+  ? safeRequire('./tools/WebBrowserTool/WebBrowserTool.js', 'WebBrowserTool')
   : null
 const coordinatorModeModule = feature('COORDINATOR_MODE')
-  ? (require('./coordinator/coordinatorMode.js') as typeof import('./coordinator/coordinatorMode.js'))
+  ? (() => {
+      try {
+        return require('./coordinator/coordinatorMode.js') as typeof import('./coordinator/coordinatorMode.js')
+      } catch {
+        return null
+      }
+    })()
   : null
 const SnipTool = feature('HISTORY_SNIP')
-  ? require('./tools/SnipTool/SnipTool.js').SnipTool
+  ? safeRequire('./tools/SnipTool/SnipTool.js', 'SnipTool')
   : null
 const ListPeersTool = feature('UDS_INBOX')
-  ? require('./tools/ListPeersTool/ListPeersTool.js').ListPeersTool
+  ? safeRequire('./tools/ListPeersTool/ListPeersTool.js', 'ListPeersTool')
   : null
 const WorkflowTool = feature('WORKFLOW_SCRIPTS')
   ? (() => {
-      require('./tools/WorkflowTool/bundled/index.js').initBundledWorkflows()
-      return require('./tools/WorkflowTool/WorkflowTool.js').WorkflowTool
+      try {
+        require('./tools/WorkflowTool/bundled/index.js').initBundledWorkflows()
+        return safeRequire('./tools/WorkflowTool/WorkflowTool.js', 'WorkflowTool')
+      } catch {
+        return null
+      }
     })()
   : null
 /* eslint-enable custom-rules/no-process-env-top-level, @typescript-eslint/no-require-imports */
@@ -149,9 +165,7 @@ export { REPL_ONLY_TOOLS }
 /* eslint-disable @typescript-eslint/no-require-imports */
 const getPowerShellTool = () => {
   if (!isPowerShellToolEnabled()) return null
-  return (
-    require('./tools/PowerShellTool/PowerShellTool.js') as typeof import('./tools/PowerShellTool/PowerShellTool.js')
-  ).PowerShellTool
+  return safeRequire('./tools/PowerShellTool/PowerShellTool.js', 'PowerShellTool')
 }
 /* eslint-enable @typescript-eslint/no-require-imports */
 

@@ -44,10 +44,20 @@ import skills from './commands/skills/index.js'
 import status from './commands/status/index.js'
 import tasks from './commands/tasks/index.js'
 import teleport from './commands/teleport/index.js'
+
+// Helper for safe dynamic require - only resolves at runtime
+function safeRequireDefault(modulePath: string): any {
+  try {
+    return require(modulePath).default
+  } catch {
+    return null
+  }
+}
+
 /* eslint-disable @typescript-eslint/no-require-imports */
 const agentsPlatform =
   process.env.USER_TYPE === 'ant'
-    ? require('./commands/agents-platform/index.js').default
+    ? safeRequireDefault('./commands/agents-platform/index.js')
     : null
 /* eslint-enable @typescript-eslint/no-require-imports */
 import securityReview from './commands/security-review.js'
@@ -61,64 +71,58 @@ import { feature } from 'bun:bundle'
 /* eslint-disable @typescript-eslint/no-require-imports */
 const proactive =
   feature('PROACTIVE') || feature('KAIROS')
-    ? require('./commands/proactive.js').default
+    ? safeRequireDefault('./commands/proactive.js')
     : null
 const briefCommand =
   feature('KAIROS') || feature('KAIROS_BRIEF')
-    ? require('./commands/brief.js').default
+    ? safeRequireDefault('./commands/brief.js')
     : null
 const assistantCommand = feature('KAIROS')
-  ? require('./commands/assistant/index.js').default
+  ? safeRequireDefault('./commands/assistant/index.js')
   : null
 const bridge = feature('BRIDGE_MODE')
-  ? require('./commands/bridge/index.js').default
+  ? safeRequireDefault('./commands/bridge/index.js')
   : null
 const remoteControlServerCommand =
   feature('DAEMON') && feature('BRIDGE_MODE')
-    ? require('./commands/remoteControlServer/index.js').default
+    ? safeRequireDefault('./commands/remoteControlServer/index.js')
     : null
 const voiceCommand = feature('VOICE_MODE')
-  ? require('./commands/voice/index.js').default
+  ? safeRequireDefault('./commands/voice/index.js')
   : null
 const forceSnip = feature('HISTORY_SNIP')
-  ? require('./commands/force-snip.js').default
+  ? safeRequireDefault('./commands/force-snip.js')
   : null
 const workflowsCmd = feature('WORKFLOW_SCRIPTS')
-  ? (
-      require('./commands/workflows/index.js') as typeof import('./commands/workflows/index.js')
-    ).default
+  ? safeRequireDefault('./commands/workflows/index.js')
   : null
 const webCmd = feature('CCR_REMOTE_SETUP')
-  ? (
-      require('./commands/remote-setup/index.js') as typeof import('./commands/remote-setup/index.js')
-    ).default
+  ? safeRequireDefault('./commands/remote-setup/index.js')
   : null
 const clearSkillIndexCache = feature('EXPERIMENTAL_SKILL_SEARCH')
-  ? (
-      require('./services/skillSearch/localSearch.js') as typeof import('./services/skillSearch/localSearch.js')
-    ).clearSkillIndexCache
+  ? (() => {
+      try {
+        return require('./services/skillSearch/localSearch.js').clearSkillIndexCache
+      } catch {
+        return null
+      }
+    })()
   : null
 const subscribePr = feature('KAIROS_GITHUB_WEBHOOKS')
-  ? require('./commands/subscribe-pr.js').default
+  ? safeRequireDefault('./commands/subscribe-pr.js')
   : null
 const ultraplan = feature('ULTRAPLAN')
-  ? require('./commands/ultraplan.js').default
+  ? safeRequireDefault('./commands/ultraplan.js')
   : null
-const torch = feature('TORCH') ? require('./commands/torch.js').default : null
+const torch = feature('TORCH') ? safeRequireDefault('./commands/torch.js') : null
 const peersCmd = feature('UDS_INBOX')
-  ? (
-      require('./commands/peers/index.js') as typeof import('./commands/peers/index.js')
-    ).default
+  ? safeRequireDefault('./commands/peers/index.js')
   : null
 const forkCmd = feature('FORK_SUBAGENT')
-  ? (
-      require('./commands/fork/index.js') as typeof import('./commands/fork/index.js')
-    ).default
+  ? safeRequireDefault('./commands/fork/index.js')
   : null
 const buddy = feature('BUDDY')
-  ? (
-      require('./commands/buddy/index.js') as typeof import('./commands/buddy/index.js')
-    ).default
+  ? safeRequireDefault('./commands/buddy/index.js')
   : null
 /* eslint-enable @typescript-eslint/no-require-imports */
 import thinkback from './commands/thinkback/index.js'
@@ -139,6 +143,8 @@ import heapDump from './commands/heapdump/index.js'
 import mockLimits from './commands/mock-limits/index.js'
 import bridgeKick from './commands/bridge-kick.js'
 import version from './commands/version.js'
+import wechat from './commands/wechat/index.js'
+import wechatDaemon from './commands/wechat-daemon/index.js'
 import summary from './commands/summary/index.js'
 import {
   resetLimits,
@@ -317,6 +323,8 @@ const COMMANDS = memoize((): Command[] => [
   usage,
   usageReport,
   vim,
+  wechat,
+  wechatDaemon,
   ...(webCmd ? [webCmd] : []),
   ...(forkCmd ? [forkCmd] : []),
   ...(buddy ? [buddy] : []),
